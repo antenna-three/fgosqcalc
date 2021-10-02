@@ -1,6 +1,6 @@
-import { Box } from '@chakra-ui/layout';
-import { VStack } from '@chakra-ui/react';
-import React, { FC } from 'react';
+import { Box } from '@chakra-ui/layout'
+import { VStack } from '@chakra-ui/react'
+import React, { FC } from 'react'
 
 export const Card: FC = ({ children }) => (
   <Box p={5} borderWidth="thin" borderRadius="md" shadow="md">
@@ -8,4 +8,4 @@ export const Card: FC = ({ children }) => (
       {children}
     </VStack>
   </Box>
-);
+)
