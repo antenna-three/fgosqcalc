@@ -162,7 +162,7 @@ const QuestBondCalculator = ({
                 >
                   <HStack>
                     {[0, 1, 2].map((i) => (
-                      <Radio key={i} value={i * 50}>
+                      <Radio key={i} value={(i * 50).toString()}>
                         {i}枚
                       </Radio>
                     ))}
