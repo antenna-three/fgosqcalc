@@ -48,8 +48,9 @@ import {
   ModalHeader,
   Radio,
   RadioGroup,
+  Badge,
 } from '@chakra-ui/react'
-import { AddIcon, RepeatClockIcon } from '@chakra-ui/icons'
+import { RepeatClockIcon, SmallAddIcon } from '@chakra-ui/icons'
 import { ColorModeSwitcher } from './ColorModeSwitcher'
 import { useLocalStorage } from './useLocalStorage'
 import {
@@ -160,15 +161,19 @@ const QuestBondCalculator = ({
                   }}
                 >
                   <HStack>
-                    <Radio value="0">0</Radio>
-                    <Radio value="50">1</Radio>
-                    <Radio value="100">2</Radio>
+                    {[0, 1, 2].map((i) => (
+                      <Radio key={i} value={i * 50}>
+                        {i}枚
+                      </Radio>
+                    ))}
                   </HStack>
                 </RadioGroup>
               </FormControl>
               <ButtonGroup>
                 <Button onClick={onClose}>キャンセル</Button>
-                <Button onClick={onConfirm}>決定</Button>
+                <Button onClick={onConfirm} colorScheme="twitter">
+                  決定
+                </Button>
               </ButtonGroup>
             </VStack>
           </ModalBody>
@@ -203,7 +208,7 @@ const AddSaintQuartzPopover = ({
       initialFocusRef={saintQuartzAddInputRef}
     >
       <PopoverTrigger>
-        <IconButton aria-label="聖晶石を追加" icon={<AddIcon />} />
+        <IconButton aria-label="聖晶石を追加" icon={<SmallAddIcon />} />
       </PopoverTrigger>
       <PopoverContent>
         <PopoverArrow />
@@ -220,10 +225,10 @@ const AddSaintQuartzPopover = ({
               ref={saintQuartzAddInputRef}
             />
             <ButtonGroup d="flex" justifyContent="flex-end">
-              <Button onClick={onClose} variant="outline">
-                キャンセル
+              <Button onClick={onClose}>キャンセル</Button>
+              <Button onClick={addSaintQuartz} colorScheme="twitter">
+                決定
               </Button>
-              <Button onClick={addSaintQuartz}>決定</Button>
             </ButtonGroup>
           </Stack>
         </PopoverBody>
@@ -328,13 +333,11 @@ export const App = (): JSX.Element => {
           <VStack alignItems="stretch">
             <HStack justifyContent="space-between">
               <Heading as="h1" my={5}>
-                FGO AP Calculator
+                FGO 石割計算機
               </Heading>
               <ColorModeSwitcher />
             </HStack>
-            <Text>
-              聖晶石を消費する周回において、目標周回数に達したときの聖晶石所持数とAPを計算します。
-            </Text>
+            <Text>目標周回数に達したときの聖晶石所持数とAPを計算します。</Text>
             <Card>
               <fieldset>
                 <VStack alignItems="stretch">
@@ -433,14 +436,13 @@ export const App = (): JSX.Element => {
                 <AccordionItem>
                   <h2>
                     <AccordionButton>
-                      <Box flex="1" textAlign="left">
-                        絆カウント
-                      </Box>
-                      <AccordionIcon />
+                      <Box>絆カウント</Box>
+                      <Badge>任意</Badge>
+                      <AccordionIcon marginLeft="auto" />
                     </AccordionButton>
                   </h2>
                   <AccordionPanel px={5}>
-                    <VStack>
+                    <VStack alignItems="stretch">
                       <FormControl>
                         <FormLabel>開始時の累計絆ポイント</FormLabel>
                         <Input
@@ -468,9 +470,6 @@ export const App = (): JSX.Element => {
                               onChange={handleChange}
                             />
                           </InputGroup>
-                          <Text whiteSpace="nowrap">
-                            = {state.questBond + state.questBondBonus}
-                          </Text>
                         </HStack>
                       </FormControl>
                       <QuestBondCalculator setState={setState} />
@@ -488,14 +487,9 @@ export const App = (): JSX.Element => {
                   value={state.saintQuartzAddition}
                   onChange={handleChange}
                 />
-                <ButtonGroup marginTop={3}>
+                <ButtonGroup marginTop={3} flexWrap="wrap">
                   {[-1, 1, 2, 3].map((value) => (
-                    <Button
-                      type="button"
-                      value={value}
-                      onClick={addSaintQuartz}
-                      key={value}
-                    >
+                    <Button value={value} onClick={addSaintQuartz} key={value}>
                       {value > 0 ? '+' : ''}
                       {value}
                     </Button>
@@ -503,7 +497,7 @@ export const App = (): JSX.Element => {
                   <AddSaintQuartzPopover setState={setState} />
                 </ButtonGroup>
                 <FormHelperText>
-                  聖晶石召喚を行ったとき、絆レベルアップ報酬やログインボーナスを受け取ったときは忘れず追加してください。
+                  聖晶石召喚を行ったとき、絆レベルアップ報酬やログインボーナスを受け取ったときは忘れず記録してください。
                 </FormHelperText>
               </FormControl>
             </Card>
@@ -529,22 +523,18 @@ export const App = (): JSX.Element => {
                   </StatNumber>
                 </Stat>
               </StatGroup>
-              {!isNaN(finalBond) && (
+              {!isNaN(finalBond) && finalBond > 0 && (
                 <Stat>
                   <StatLabel>累計絆ポイント</StatLabel>
                   <StatNumber>{finalBond}</StatNumber>
                 </Stat>
               )}
             </Card>
-            <Button type="button" onClick={addLap} colorScheme="twitter">
+            <Button onClick={addLap} colorScheme="twitter">
               周回を継続する
             </Button>
-            <Button type="button" onClick={resetLap}>
-              累計周回数をリセット
-            </Button>
-            <Button type="button" onClick={resetAll}>
-              入力内容をすべてリセット
-            </Button>
+            <Button onClick={resetLap}>累計周回数をリセット</Button>
+            <Button onClick={resetAll}>入力内容をすべてリセット</Button>
           </VStack>
         </form>
       </Container>
