@@ -28,13 +28,56 @@ import {
   InputRightElement,
   InputGroup,
   IconButton,
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+  PopoverArrow,
+  PopoverCloseButton,
+  PopoverHeader,
+  PopoverBody,
+  ButtonGroup,
+  Stack,
+  useDisclosure,
+  InputLeftAddon,
+  InputRightAddon,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalBody,
+  ModalCloseButton,
+  ModalHeader,
+  Radio,
+  RadioGroup,
 } from '@chakra-ui/react'
-import { RepeatClockIcon } from '@chakra-ui/icons'
+import { AddIcon, RepeatClockIcon } from '@chakra-ui/icons'
 import { ColorModeSwitcher } from './ColorModeSwitcher'
 import { useLocalStorage } from './useLocalStorage'
-import { FormEventHandler, useEffect, useState } from 'react'
+import {
+  Dispatch,
+  FormEventHandler,
+  SetStateAction,
+  useEffect,
+  useRef,
+  useState,
+} from 'react'
 import { calcAp } from './calcAp'
 import { Card } from './Card'
+import { calcBond } from './calcBond'
+import { calcQuestBond } from './calcQuestBond'
+
+type State = {
+  initialTime: string
+  initialSaintQuartz: number
+  initialAp: number
+  initialBond: number
+  maxAp: number
+  questAp: number
+  questBond: number
+  questBondBonus: number
+  questLap: number
+  totalQuestLap: number
+  saintQuartzAddition: number
+}
 
 const getLocalTime = () => {
   const date = new Date()
@@ -42,18 +85,156 @@ const getLocalTime = () => {
   return date.toISOString().slice(0, -8)
 }
 
-const getInitialState = () => ({
+const getInitialState = (): State => ({
   initialTime: getLocalTime(),
   initialSaintQuartz: 0,
   initialAp: 0,
+  initialBond: 0,
   maxAp: 144,
   questAp: 20,
+  questBond: 0,
+  questBondBonus: 0,
   questLap: 0,
   totalQuestLap: 0,
   saintQuartzAddition: 0,
 })
 
-export const App = () => {
+const QuestBondCalculator = ({
+  setState,
+}: {
+  setState: Dispatch<SetStateAction<State>>
+}) => {
+  const initialLocalState = { questLv: 0, bondBonus: 0, portrait: 0 }
+  const [localState, setLocalState] = useState(initialLocalState)
+  const { isOpen, onOpen, onClose } = useDisclosure()
+  const handleChange: FormEventHandler<HTMLInputElement> = (event) => {
+    const { name, valueAsNumber } = event.currentTarget
+    setLocalState((prevState) => ({ ...prevState, [name]: valueAsNumber }))
+  }
+  const onConfirm = () => {
+    setState((prevState) => ({ ...prevState, ...calcQuestBond(localState) }))
+    onClose()
+  }
+
+  return (
+    <>
+      <Button onClick={onOpen}>推奨レベルと絆ボーナスから計算</Button>
+      <Modal isOpen={isOpen} onClose={onClose}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>獲得絆ポイントを計算する</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <VStack>
+              <FormControl>
+                <FormLabel>クエスト推奨レベル</FormLabel>
+                <Input
+                  type="number"
+                  name="questLv"
+                  value={localState.questLv}
+                  onChange={handleChange}
+                />
+              </FormControl>
+              <FormControl>
+                <FormLabel>絆ボーナス</FormLabel>
+                <InputGroup>
+                  <Input
+                    type="number"
+                    name="bondBonus"
+                    value={localState.bondBonus}
+                    onChange={handleChange}
+                  />
+                  <InputRightAddon>%</InputRightAddon>
+                </InputGroup>
+              </FormControl>
+              <FormControl>
+                <FormLabel>英霊肖像</FormLabel>
+                <RadioGroup
+                  name="portrait"
+                  value={localState.portrait.toString()}
+                  onChange={(value) => {
+                    setLocalState((prevState) => ({
+                      ...prevState,
+                      portrait: parseInt(value),
+                    }))
+                  }}
+                >
+                  <HStack>
+                    <Radio value="0">0</Radio>
+                    <Radio value="50">1</Radio>
+                    <Radio value="100">2</Radio>
+                  </HStack>
+                </RadioGroup>
+              </FormControl>
+              <ButtonGroup>
+                <Button onClick={onClose}>キャンセル</Button>
+                <Button onClick={onConfirm}>決定</Button>
+              </ButtonGroup>
+            </VStack>
+          </ModalBody>
+        </ModalContent>
+      </Modal>
+    </>
+  )
+}
+
+const AddSaintQuartzPopover = ({
+  setState,
+}: {
+  setState: Dispatch<SetStateAction<State>>
+}) => {
+  const [saintQuartzToAdd, setSaintQuartzToAdd] = useState(0)
+  const saintQuartzAddInputRef = useRef<HTMLInputElement>(null)
+  const { onOpen, onClose, isOpen } = useDisclosure()
+
+  const addSaintQuartz = () => {
+    setState((prevState) => ({
+      ...prevState,
+      saintQuartzAddition: prevState.saintQuartzAddition + saintQuartzToAdd,
+    }))
+    onClose()
+  }
+
+  return (
+    <Popover
+      isOpen={isOpen}
+      onOpen={onOpen}
+      onClose={onClose}
+      initialFocusRef={saintQuartzAddInputRef}
+    >
+      <PopoverTrigger>
+        <IconButton aria-label="聖晶石を追加" icon={<AddIcon />} />
+      </PopoverTrigger>
+      <PopoverContent>
+        <PopoverArrow />
+        <PopoverCloseButton />
+        <PopoverHeader>聖晶石を追加</PopoverHeader>
+        <PopoverBody>
+          <Stack>
+            <Input
+              type="number"
+              value={saintQuartzToAdd}
+              onChange={(event) => {
+                setSaintQuartzToAdd(event.currentTarget.valueAsNumber)
+              }}
+              ref={saintQuartzAddInputRef}
+            />
+            <ButtonGroup d="flex" justifyContent="flex-end">
+              <Button onClick={onClose} variant="outline">
+                キャンセル
+              </Button>
+              <Button onClick={addSaintQuartz}>決定</Button>
+            </ButtonGroup>
+          </Stack>
+        </PopoverBody>
+      </PopoverContent>
+    </Popover>
+  )
+}
+
+const dashForNaN = (value: number) => (isNaN(value) ? '―' : value)
+
+export const App = (): JSX.Element => {
   const initialState = getInitialState()
   const [state, setState] = useLocalStorage('state', initialState)
   const [currentTime, setCurrentTime] = useState(new Date())
@@ -81,6 +262,13 @@ export const App = () => {
 
   const isLapTooLarge = finalApMax - finalApMin >= state.questAp
 
+  const finalBond = calcBond(
+    state.initialBond,
+    state.questBond,
+    state.questBondBonus,
+    state.questLap
+  )
+
   const handleChange: FormEventHandler<HTMLInputElement> = (event) => {
     const name = event.currentTarget.name as keyof typeof initialState
     const value =
@@ -106,6 +294,7 @@ export const App = () => {
       initialTime: getLocalTime(),
       initialSaintQuartz: finalSaintQuartz,
       initialAp: finalApMax,
+      initialBond: finalBond,
       totalQuestLap: prevState.totalQuestLap + prevState.questLap,
     }))
     setCurrentTime(new Date())
@@ -125,6 +314,7 @@ export const App = () => {
 
   const resetAll = () => {
     setState(getInitialState())
+    setCurrentTime(new Date())
   }
 
   return (
@@ -228,9 +418,9 @@ export const App = () => {
                     />
                     {isLapTooLarge && (
                       <FormHelperText>
-                        <Alert status="error" borderRadius="md">
+                        <Alert status="warning" borderRadius="md">
                           <AlertIcon />
-                          周回数が大きすぎます。周回数を100周程度に分割して、「周回を継続する」ボタンを使って少しずつ計測するようにしてください。
+                          周回数が大きすぎます。絆カウントを併用するか、周回数を100周程度に分割して、「周回を継続する」ボタンを使って少しずつ計測するようにしてください。
                         </Alert>
                       </FormHelperText>
                     )}
@@ -253,12 +443,37 @@ export const App = () => {
                     <VStack>
                       <FormControl>
                         <FormLabel>開始時の累計絆ポイント</FormLabel>
-                        <Input type="number" />
+                        <Input
+                          type="number"
+                          name="initialBond"
+                          value={state.initialBond}
+                          onChange={handleChange}
+                        />
                       </FormControl>
                       <FormControl>
                         <FormLabel>獲得絆ポイント</FormLabel>
-                        <Input type="number" />
+                        <HStack>
+                          <Input
+                            type="number"
+                            name="questBond"
+                            value={state.questBond}
+                            onChange={handleChange}
+                          />
+                          <InputGroup>
+                            <InputLeftAddon>+</InputLeftAddon>
+                            <Input
+                              type="number"
+                              name="questBondBonus"
+                              value={state.questBondBonus}
+                              onChange={handleChange}
+                            />
+                          </InputGroup>
+                          <Text whiteSpace="nowrap">
+                            = {state.questBond + state.questBondBonus}
+                          </Text>
+                        </HStack>
                       </FormControl>
+                      <QuestBondCalculator setState={setState} />
                     </VStack>
                   </AccordionPanel>
                 </AccordionItem>
@@ -273,7 +488,7 @@ export const App = () => {
                   value={state.saintQuartzAddition}
                   onChange={handleChange}
                 />
-                <HStack marginTop={3}>
+                <ButtonGroup marginTop={3}>
                   {[-1, 1, 2, 3].map((value) => (
                     <Button
                       type="button"
@@ -285,7 +500,8 @@ export const App = () => {
                       {value}
                     </Button>
                   ))}
-                </HStack>
+                  <AddSaintQuartzPopover setState={setState} />
+                </ButtonGroup>
                 <FormHelperText>
                   聖晶石召喚を行ったとき、絆レベルアップ報酬やログインボーナスを受け取ったときは忘れず追加してください。
                 </FormHelperText>
@@ -299,22 +515,26 @@ export const App = () => {
                 <Stat>
                   <StatLabel>累計周回数</StatLabel>
                   <StatNumber>
-                    {state.totalQuestLap + state.questLap}
+                    {dashForNaN(state.totalQuestLap + state.questLap)}
                   </StatNumber>
                 </Stat>
                 <Stat>
                   <StatLabel>聖晶石所持数</StatLabel>
-                  <StatNumber>
-                    {finalSaintQuartz == null ? '-' : finalSaintQuartz}
-                  </StatNumber>
+                  <StatNumber>{dashForNaN(finalSaintQuartz)}</StatNumber>
                 </Stat>
                 <Stat>
                   <StatLabel>AP</StatLabel>
                   <StatNumber>
-                    {finalApMin} ~ {finalApMax}
+                    {dashForNaN(finalApMin)} ~ {dashForNaN(finalApMax)}
                   </StatNumber>
                 </Stat>
               </StatGroup>
+              {!isNaN(finalBond) && (
+                <Stat>
+                  <StatLabel>累計絆ポイント</StatLabel>
+                  <StatNumber>{finalBond}</StatNumber>
+                </Stat>
+              )}
             </Card>
             <Button type="button" onClick={addLap} colorScheme="twitter">
               周回を継続する
