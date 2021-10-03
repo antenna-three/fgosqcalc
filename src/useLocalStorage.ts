@@ -9,7 +9,10 @@ export const useLocalStorage = <T>(
     const json = localStorage.getItem(key)
     if (json) {
       const obj = JSON.parse(json)
-      if (typeof initialState == 'object') {
+      if (
+        typeof initialState == 'object' &&
+        Object.prototype.toString.call(initialState) == '[object Object]'
+      ) {
         setState({ ...initialState, ...obj })
       } else {
         setState(obj)
