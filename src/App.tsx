@@ -1,4 +1,4 @@
-import * as React from 'react'
+import React from 'react'
 import {
   ChakraProvider,
   theme,
@@ -20,7 +20,6 @@ import {
   Text,
   Alert,
   AlertIcon,
-  Accordion,
   AccordionItem,
   AccordionButton,
   AccordionIcon,
@@ -49,6 +48,9 @@ import {
   Radio,
   RadioGroup,
   Badge,
+  OrderedList,
+  ListItem,
+  Link,
 } from '@chakra-ui/react'
 import { RepeatClockIcon, SmallAddIcon } from '@chakra-ui/icons'
 import { ColorModeSwitcher } from './ColorModeSwitcher'
@@ -65,6 +67,7 @@ import { calcAp } from './calcAp'
 import { Card } from './Card'
 import { calcBond } from './calcBond'
 import { calcQuestBond } from './calcQuestBond'
+import { AccordionCard } from './AccordionCard'
 
 type State = {
   initialTime: string
@@ -338,6 +341,55 @@ export const App = (): JSX.Element => {
               <ColorModeSwitcher />
             </HStack>
             <Text>目標周回数に達したときの聖晶石所持数とAPを計算します。</Text>
+            <AccordionCard>
+              <AccordionItem>
+                <h2>
+                  <AccordionButton>
+                    <Box>使い方</Box>
+                    <AccordionIcon marginLeft="auto" />
+                  </AccordionButton>
+                </h2>
+                <AccordionPanel>
+                  <OrderedList spacing={3}>
+                    <ListItem>
+                      戦利品のスクリーンショットを忘れずに撮影しましょう。
+                    </ListItem>
+                    <ListItem>
+                      計算機に情報を入力します。APの誤差を抑えるため、周回数は100周またはそれ以下を推奨します。
+                    </ListItem>
+                    <ListItem>
+                      目標回数だけ周回したときの聖晶石所持数とAPが出ます。
+                    </ListItem>
+                    <ListItem>
+                      周回を始めます。APは自然回復込みで計算されるので、ある程度周回したらブラウザで再度確認してください。
+                    </ListItem>
+                    <ListItem>
+                      聖晶石召喚を行って聖晶石を消費したときや、絆レベルアップボーナスやログインボーナスで聖晶石を受け取ったときは必ず「周回中の聖晶石増減」に記録してください。記録を忘れるとカウントが破綻します。
+                    </ListItem>
+                    <ListItem>
+                      APが溢れた状態で時間が経つと周回数がずれますのでご注意ください。
+                    </ListItem>
+                    <ListItem>
+                      APが計算結果の範囲内になったら目標達成です。さらに周回する場合は、「周回を継続する」ボタンを押すと入力内容が現在の状態に書き換えられ、続けて周回できるようになります。APは誤差があるので、実際の値に書き換えてください。
+                    </ListItem>
+                    <ListItem>
+                      検証用に累計絆ポイントを使って周回数を確かめることもできます。
+                    </ListItem>
+                    <ListItem>
+                      お疲れさまでした。アイテム獲得数の計算、周回報告には
+                      <Link
+                        href="https://fgosccalc.max747.org/"
+                        isExternal
+                        color="blue.500"
+                      >
+                        fgosccalc
+                      </Link>
+                      の利用をおすすめします。
+                    </ListItem>
+                  </OrderedList>
+                </AccordionPanel>
+              </AccordionItem>
+            </AccordionCard>
             <Card>
               <fieldset>
                 <VStack alignItems="stretch">
@@ -431,53 +483,51 @@ export const App = (): JSX.Element => {
                 </VStack>
               </fieldset>
             </Card>
-            <Box borderWidth="thin" borderRadius="md" shadow="md">
-              <Accordion allowToggle>
-                <AccordionItem>
-                  <h2>
-                    <AccordionButton>
-                      <Box>絆カウント</Box>
-                      <Badge>任意</Badge>
-                      <AccordionIcon marginLeft="auto" />
-                    </AccordionButton>
-                  </h2>
-                  <AccordionPanel px={5}>
-                    <VStack alignItems="stretch">
-                      <FormControl>
-                        <FormLabel>開始時の累計絆ポイント</FormLabel>
+            <AccordionCard>
+              <AccordionItem>
+                <h2>
+                  <AccordionButton>
+                    <Box>絆カウント</Box>
+                    <Badge>任意</Badge>
+                    <AccordionIcon marginLeft="auto" />
+                  </AccordionButton>
+                </h2>
+                <AccordionPanel px={5}>
+                  <VStack alignItems="stretch">
+                    <FormControl>
+                      <FormLabel>開始時の累計絆ポイント</FormLabel>
+                      <Input
+                        type="number"
+                        name="initialBond"
+                        value={state.initialBond}
+                        onChange={handleChange}
+                      />
+                    </FormControl>
+                    <FormControl>
+                      <FormLabel>獲得絆ポイント</FormLabel>
+                      <HStack>
                         <Input
                           type="number"
-                          name="initialBond"
-                          value={state.initialBond}
+                          name="questBond"
+                          value={state.questBond}
                           onChange={handleChange}
                         />
-                      </FormControl>
-                      <FormControl>
-                        <FormLabel>獲得絆ポイント</FormLabel>
-                        <HStack>
+                        <InputGroup>
+                          <InputLeftAddon>+</InputLeftAddon>
                           <Input
                             type="number"
-                            name="questBond"
-                            value={state.questBond}
+                            name="questBondBonus"
+                            value={state.questBondBonus}
                             onChange={handleChange}
                           />
-                          <InputGroup>
-                            <InputLeftAddon>+</InputLeftAddon>
-                            <Input
-                              type="number"
-                              name="questBondBonus"
-                              value={state.questBondBonus}
-                              onChange={handleChange}
-                            />
-                          </InputGroup>
-                        </HStack>
-                      </FormControl>
-                      <QuestBondCalculator setState={setState} />
-                    </VStack>
-                  </AccordionPanel>
-                </AccordionItem>
-              </Accordion>
-            </Box>
+                        </InputGroup>
+                      </HStack>
+                    </FormControl>
+                    <QuestBondCalculator setState={setState} />
+                  </VStack>
+                </AccordionPanel>
+              </AccordionItem>
+            </AccordionCard>
             <Card>
               <FormControl id="saint-quartz-addition">
                 <FormLabel>周回中の聖晶石増減</FormLabel>
