@@ -303,6 +303,7 @@ export const App = (): JSX.Element => {
       initialSaintQuartz: finalSaintQuartz,
       initialAp: finalApMax,
       initialBond: finalBond,
+      saintQuartzAddition: 0,
       totalQuestLap: prevState.totalQuestLap + prevState.questLap,
     }))
     setCurrentTime(new Date())
